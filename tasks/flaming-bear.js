@@ -8,6 +8,9 @@ module.exports = function(grunt) {
     if (this.target === 'deploy') {
       var deploy = require('../lib/deploy');
       deploy.call(this, grunt);
+    } else if (this.target === 'promote') {
+      var promote = require('../lib/promote');
+      promote.call(this, grunt);
     } else {
       grunt.log.warn('Target not expected:', this.target);
     }
