@@ -137,7 +137,13 @@ module.exports = function(grunt) {
       password: null
     };
 
-    var redisOptions = grunt.config('redis.options');
+    var redisOptions;
+
+    if (grunt.config('redis') && grunt.config('redis.options')) {
+      redisOptions = grunt.config('redis.options');
+    } else {
+      redisOptions = {};
+    }
 
     for (var option in defaultRedisOptions) {
       if (!redisOptions.hasOwnProperty(option)) {
