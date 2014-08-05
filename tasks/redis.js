@@ -40,7 +40,7 @@ module.exports = function(grunt) {
   grunt.registerTask('release:publish-index', function() {
     var done = this.async();
     var data = files.indexFile.contents;
-    var key = redisKey();
+    var key = manifestRedisKey();
 
     connect()
     .then(function() {
@@ -94,27 +94,23 @@ module.exports = function(grunt) {
     });
   };
 
-  function redisKey() {
-    var parts = [];
-    var appName = common.appName;
+  function manifestRedisKey() {
     var manifestId = files.manifestFile.manifestId;
-    if (appName) {
-      parts.push(appName);
-    }
-    parts.push('index');
-    parts.push(manifestId);
-
-    return parts.join(':');
+    return redisKey(manifestId);
   };
 
   function currentRedisKey() {
+    return redisKey('current');
+  };
+
+  function redisKey(id) {
     var parts = [];
     var appName = common.appName;
     if (appName) {
       parts.push(appName);
     }
     parts.push('index');
-    parts.push('current');
+    parts.push(id);
 
     return parts.join(':');
   };
