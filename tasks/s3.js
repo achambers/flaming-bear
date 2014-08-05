@@ -1,18 +1,13 @@
 'use strict';
 
-var path = require('path');
-var s3 = require('s3');
-var client;
-var uploadParams;
-
-function isHiddenFile(path) {
-  return /^\./.test(path);
-};
 
 module.exports = function(grunt) {
-  grunt.registerTask('release:publish-assets', ['s3']);
+  var path = require('path');
+  var s3 = require('s3');
+  var client;
+  var uploadParams;
 
-  grunt.registerTask('s3', function() {
+  grunt.registerTask('release:publish-assets', function() {
     var done = this.async();
 
     var distDir = grunt.config.get('distDir') || 'dist';
@@ -23,7 +18,7 @@ module.exports = function(grunt) {
     grunt.config.requires('s3.options.accessKeySecret');
     grunt.config.requires('s3.options.bucket');
 
-    options = this.options();
+    options = grunt.config('s3.options');
 
     client = s3.createClient({
       s3Options: {
@@ -64,8 +59,16 @@ module.exports = function(grunt) {
 
     uploader.on('end', function() {
       grunt.log.ok('Finished uploading to s3');
+
+      grunt.log.subhead('To publish the index.html, run:');
+      grunt.log.write('grunt release:publish-index');
+      console.log('');
+
       done();
     });
   });
-};
 
+  function isHiddenFile(path) {
+    return /^\./.test(path);
+  };
+};
