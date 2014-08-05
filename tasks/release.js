@@ -12,11 +12,14 @@ module.exports = function(grunt) {
 
   grunt.registerTask('release:promote-index', function() {
     var done = this.async();
-    var key = grunt.option('manifest-id');
+    var manifestId = grunt.option('manifest-id');
+    var key = 'index';
 
-    if (!key) {
+    if (!manifestId) {
       grunt.fail.fatal('manifest-id must be specified');
     }
+
+    key = key + ':' + manifestId;
 
     connect()
     .then(function() {
@@ -173,15 +176,7 @@ module.exports = function(grunt) {
   };
 
   function redisKey(id) {
-    var parts = [];
-    var appName = common.appName;
-    if (appName) {
-      parts.push(appName);
-    }
-    parts.push('index');
-    parts.push(id);
-
-    return parts.join(':');
+    return 'index:' + id;
   };
 
   function get(key) {
@@ -210,14 +205,15 @@ module.exports = function(grunt) {
 
   function logPublished(key) {
     var appUrl = common.appUrl || 'http://<your-app-url>';
+    var manifestId = files.manifestFile.manifestId;
 
     grunt.log.ok("File uploaded [" + key + "]");
 
     grunt.log.subhead('To access this release, visit:');
-    grunt.log.writeln(appUrl + '?manifest-id=' + files.manifestFile.manifestId);
+    grunt.log.writeln(appUrl + '?manifest-id=' + manifestId);
 
     grunt.log.subhead('To promote this release, run:');
-    grunt.log.writeln('grunt release:promote-index --manifest-id=' + key);
+    grunt.log.writeln('grunt release:promote-index --manifest-id=' + manifestId);
     grunt.log.writeln('');
   };
 
