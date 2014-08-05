@@ -66,7 +66,7 @@ module.exports = function(grunt) {
   grunt.registerTask('release:publish-assets', function() {
     var done = this.async();
 
-    var distDir = grunt.config.get('distDir') || 'dist';
+    var distDir = common.distDir;
     var name = this.name;
     var options;
     var s3Client;
