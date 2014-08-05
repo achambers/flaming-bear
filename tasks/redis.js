@@ -18,20 +18,84 @@ function redisKey() {
   return parts.join(':');
 };
 
-module.exports = function(grunt) {
-  grunt.registerTask('release:publish-index', ['redis']);
+function currentRedisKey() {
+  var parts = [];
+  var appName = common.appName;
+  if (appName) {
+    parts.push(appName);
+  }
+  parts.push('index');
+  parts.push('current');
 
-  grunt.registerTask('redis', function() {
+  return parts.join(':');
+};
+
+function redisOptions(grunt) {
+  var defaultRedisOptions = {
+    host: '127.0.01',
+    port: '6379',
+    password: null
+  };
+
+  var redisOptions = grunt.config('redis.options');
+
+  for (var option in defaultRedisOptions) {
+    if (!redisOptions.hasOwnProperty(option)) {
+      redisOptions[option] = defaultRedisOptions[option];
+    }
+  }
+
+  return redisOptions;
+};
+
+module.exports = function(grunt) {
+  grunt.registerTask('release:promote-index', function() {
+    common = require('../lib/common')(grunt);
+
+    var done = this.async();
+    var options = redisOptions(grunt);
+    var key = grunt.option('manifest-id');
+
+    if (!key) {
+      grunt.fail.fatal('manifest-id must be specified');
+    }
+
+    client = redis.createClient(options.port, options.host, {
+      auth_pass: options.password
+    });
+
+    client.on("error", function(error) {
+      grunt.fail.fatal("Redis Error:" + error);
+    });
+
+    client.on("connect", function(){
+      grunt.log.ok("Connected to redis");
+    });
+
+    get(key)
+    .then(function(data) {
+      var currentKey = currentRedisKey();
+      return set(currentKey, data);
+    })
+    .then(function() {
+      grunt.log.ok("File promoted [" + key + "]");
+    })
+    .catch(function(error) {
+      grunt.log.error('Error occured when promoting [' + key + ']: ' + error);
+    })
+    .finally(function() {
+      client.quit();
+      done();
+    });
+  });
+
+  grunt.registerTask('release:publish-index', function() {
     common = require('../lib/common')(grunt);
     files = require('../lib/files')(grunt);
 
     var done = this.async();
 
-    var options = this.options({
-      host: '127.0.01',
-      port: '6379',
-      password: null
-    });
+    var options = redisOptions(grunt);
 
     var data = files.indexFile.contents;
     var key = redisKey();
@@ -58,6 +122,18 @@ module.exports = function(grunt) {
     .finally(function() {
       client.quit();
       done();
+    });
+  });
+};
+
+function get(key) {
+  return new RSVP.Promise(function(resolve, reject) {
+    client.get(key, function(error, data) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(data);
+      }
     });
   });
 };
