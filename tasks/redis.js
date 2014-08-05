@@ -79,12 +79,18 @@ module.exports = function(grunt) {
     })
     .then(function() {
       grunt.log.ok("File promoted [" + key + "]");
+
+      var appUrl = common.appUrl || 'http://<your-app-url>';
+
+      grunt.log.subhead('To access this release, visit:');
+      grunt.log.writeln(appUrl);
     })
     .catch(function(error) {
       grunt.log.error('Error occured when promoting [' + key + ']: ' + error);
     })
     .finally(function() {
       client.quit();
+      grunt.log.ok('Disconnected from redis');
       done();
     });
   });
@@ -115,12 +121,21 @@ module.exports = function(grunt) {
     set(key, data)
     .then(function() {
       grunt.log.ok("File uploaded [" + key + "]");
-      grunt.log.ok('grunt release:promote-index --manifest-id=' + key);
+
+      var appUrl = common.appUrl || 'http://<your-app-url>';
+
+      grunt.log.subhead('To access this release, visit:');
+      grunt.log.writeln(appUrl + '?manifest-id=' + files.manifestFile.manifestId);
+
+      grunt.log.subhead('To promote this release, run:');
+      grunt.log.writeln('grunt release:promote-index --manifest-id=' + key);
+      grunt.log.writeln('');
     }, function(error) {
       grunt.fail.fatal("Error uploading: " + error);
     })
     .finally(function() {
       client.quit();
+      grunt.log.ok('Disconnected from redis');
       done();
     });
   });
